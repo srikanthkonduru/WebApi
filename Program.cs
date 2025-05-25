@@ -1,16 +1,39 @@
+using Azure.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
-string appConfigConnectionString = builder.Configuration["ConnectionString:endPoint"];
+string appConfigConnectionString = builder.Configuration["ConnectionString:connection"];
+string endPoint = builder.Configuration["ConnectionString:endPoint"];
+
+//Using Connections string 
+//builder.Configuration.AddAzureAppConfiguration(options =>
+//{
+
+//	options.Connect(appConfigConnectionString)
+//		   .Select("*") // Load all keys
+//		   .ConfigureRefresh(refreshOptions =>
+//		   {
+//			   // Optional: Configure dynamic refresh
+//			   refreshOptions.Register("Settings:Sentinel", refreshAll: true)
+//							 .SetCacheExpiration(TimeSpan.FromMinutes(5));
+//		   });
+//});
+
+//Using EndPoints and Azure Default Credentials and added Secret Managet in asp.net core
+
 builder.Configuration.AddAzureAppConfiguration(options =>
 {
-	options.Connect(appConfigConnectionString)
-		   .Select("*") // Load all keys or filter with Select("App:*")
+	var token = new DefaultAzureCredential();
+	options.Connect(new Uri(endPoint), token)
+		   .Select("*") // Load all keys
 		   .ConfigureRefresh(refreshOptions =>
 		   {
+			   // Optional: Configure dynamic refresh
 			   refreshOptions.Register("Settings:Sentinel", refreshAll: true)
-							 .SetCacheExpiration(TimeSpan.FromSeconds(5));
+							 .SetCacheExpiration(TimeSpan.FromMinutes(5));
 		   });
 });
+
 builder.Services.AddAzureAppConfiguration();
 // Add services to the container.
 
